@@ -1,0 +1,26 @@
+---
+
+
+- name: 'Restart puma-manager'
+  action: service name=puma-manager state=restarted
+  become: yes
+  become_user: {{ deploy_user }}
+
+- name: 'Restart nginx'
+  action: service name=nginx state=restarted
+
+
+- name: 'Post tasks all only in one server'
+  become: yes
+  become_user: '{{ deploy_user }}'
+  shell: >
+    cd {{ ansistrano_release_path.stdout }} &&
+    RAILS_ENV={{ rails_env }}
+    RACK_ENV={{ rails_env }}
+    NODE_ENV={{ rails_env }}
+    {{ item.cmd }}
+  run_once: true
+  when: >
+    ({{ item.control | default(true) }} != false)
+  with_items:
+    - { cmd: "bundle exec rake cache:clear" }

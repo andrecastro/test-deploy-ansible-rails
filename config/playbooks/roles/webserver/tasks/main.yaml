@@ -1,0 +1,9 @@
+---
+- name: Intalling dependencies
+  include: prepare.yaml
+
+- name: Installing NGINX
+  include: nginx.yaml
+
+- name: Configuring puma files
+  include: puma.yaml

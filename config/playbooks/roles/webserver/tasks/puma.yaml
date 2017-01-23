@@ -1,0 +1,20 @@
+---
+- name: Add puma-manager
+  template: src=puma/etc/init/puma-manager.conf.j2 dest=/etc/init/puma-manager.conf force=yes mode=755
+  tags: puma
+
+- name: Add puma config
+  template: src=puma/etc/puma.conf.j2 dest=/etc/puma.conf force=yes mode=755
+  tags: puma
+
+- name: Add puma init script
+  template: src=puma/etc/init/puma.conf.j2 dest=/etc/init/puma.conf force=yes mode=755
+  tags: puma
+
+- name: Add puma shared/config
+  template: src=puma/production.rb.j2 dest={{deploy_directory}}/shared/config/puma/production.rb force=yes mode=755
+  tags: puma
+
+- name: Make shared/tmp/sockets
+  file: path={{deploy_directory}}/shared/tmp/sockets group=deploy owner=deploy state=directory
+  tags: tmp

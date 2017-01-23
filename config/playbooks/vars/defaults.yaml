@@ -1,0 +1,7 @@
+---
+app_name: mytest
+deploy_user: deploy
+webserver_name: mytest.andre.org
+deploy_directory: /data/{{app_name}}
+mysql_root_password: 'mysqlrootpassword' ## take this off here!!
+rails_env: 'production' ## take this off here

@@ -1,0 +1,42 @@
+---
+
+- name: 'Running bundle install'
+  become: yes
+  become_user: '{{ deploy_user }}'
+  args:
+    chdir: "{{ ansistrano_release_path.stdout }}"
+  shell: >
+    bundle install
+    --gemfile {{ ansistrano_release_path.stdout }}/Gemfile
+    --path {{ ansistrano_shared_path.stdout }}/bundle
+    --without development test
+    --deployment --quiet
+
+- name: "Running tasks in all servers"
+  become: yes
+  become_user: '{{ deploy_user }}'
+  shell: >
+    cd {{ ansistrano_release_path.stdout }} &&
+    RAILS_ENV={{ rails_env }}
+    RACK_ENV={{ rails_env }}
+    {{ item.cmd }}
+  run_once: false
+  when: >
+    ({{ item.control | default(true) }} != false)
+  with_items:
+    - { cmd: "bundle exec rake assets:precompile" }
+
+- name: "Running tasks only in the fist server"
+  become: yes
+  become_user: '{{ deploy_user }}'
+  shell: >
+    cd {{ ansistrano_release_path.stdout }} &&
+    RAILS_ENV={{ rails_env }}
+    RACK_ENV={{ rails_env }}
+    {{ item.cmd }}
+  run_once: true
+  when: >
+    ({{ item.control | default(true) }} != false)
+  with_items:
+    - { cmd: "bundle exec rake db:migrate", control: {{ migrate }} }
+    - { cmd: "bundle exec rake db:seed", control: {{ seed }}  }

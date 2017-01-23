@@ -1,0 +1,3 @@
+---
+include: update_app_resources.yaml
+include: restart_and_clean.yaml

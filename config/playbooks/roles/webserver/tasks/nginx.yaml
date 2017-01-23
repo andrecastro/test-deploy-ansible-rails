@@ -1,0 +1,21 @@
+---
+- name: Install nginx
+  apt: pkg=nginx state=latest
+
+- name: Remove the default app
+  file: path=/etc/nginx/sites-enabled/default state=absent
+
+- name: Remove the app's config, if exists
+  file: path=/etc/nginx/sites-enabled/default state=absent
+
+- name: Remove the app's symlink, if exists
+  file: path=/etc/nginx/sites-enabled/{{app_name}} state=absent
+
+- name: Configure nginx for the app
+  template: src=nginx/etc/nginx/sites-available/app.conf.j2 dest=/etc/nginx/sites-available/{{app_name}} group=www-data owner=www-data force=yes
+
+- name: Enable the app
+  file: src=/etc/nginx/sites-available/{{app_name}} dest=/etc/nginx/sites-enabled/{{app_name}} state=link
+
+- name: Restart nginx
+  action: service name=nginx state=restarted
