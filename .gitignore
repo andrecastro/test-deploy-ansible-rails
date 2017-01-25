@@ -18,6 +18,6 @@
 
 config/playbooks/keys
 
+.idea/*
 .DS_Store
-
 config/playbooks/.vagrant
