@@ -25,6 +25,10 @@
     - libxml2-dev
     - libxslt1-dev
     - curl
+    - libpq-dev
+    - libev-dev
+    - libxslt-dev
+    - libc6-dev
 
 - name: Install app dependencies
   become: yes

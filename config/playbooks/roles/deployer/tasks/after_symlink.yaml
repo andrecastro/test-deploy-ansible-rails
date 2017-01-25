@@ -1,9 +1,19 @@
 ---
+- name: 'Stop puma'
+  become: yes
+  action: service name=nginx state=stopped
+
+- name: 'Stop nginx'
+  become: yes
+  action: service name=nginx state=stopped
+
 - name: 'Running bundle install'
   bundler:
     chdir: "{{ ansistrano_release_path.stdout }}"
     exclude_groups: [development, test]
     deployment_mode: yes
+    state: present
+    gem_path: bundle
 
 - name: "Running tasks in all servers"
   shell: >
@@ -31,7 +41,7 @@
     - { cmd: "bundle exec rake db:migrate", control: '{{ migrate }}' }
     - { cmd: "bundle exec rake db:seed", control: '{{ seed }}'  }
 
-- name: 'Restart puma-manager'
+- name: 'Restart puma'
   become: yes
   command: service puma restart SECRET_KEY_BASE='{{secret_base}}'
 
