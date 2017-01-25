@@ -1,7 +1,21 @@
 ---
-app_name: mytest
-deploy_user: deploy
-webserver_name: mytest.andre.org
-deploy_directory: /data/{{app_name}}
+app_name: test_deploy
+ruby_version: 2.3.3
+deploy_user: '{{ ansible_ssh_user }}'
+home_user: '/home/{{ deploy_user }}'
+
+webserver_name: test_deploy.andre.org
+deploy_directory: '{{home_user}}/mytest'
+
+database_name: '{{app_name}}_{{rails_env}}'
+database_user_name: '{{app_name}}'
+database_user_password: '{{app_name}}_password' ## take this off here
+
 mysql_root_password: 'mysqlrootpassword' ## take this off here!!
+
+secret_base: '7025a751e18e43c9acc44429025e6ae15ca09e5a087e131c433c2de539ae72fefb48ba7e7e2da46b00b46c49cfee2fdbebea0f7c669909addf04d01e073d20ff' ## take this off here!!
+
 rails_env: 'production' ## take this off here
+
+migrate: true # take off
+seed: true # take off

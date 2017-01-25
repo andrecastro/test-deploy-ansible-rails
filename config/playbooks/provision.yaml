@@ -1,13 +1,12 @@
 ---
 - hosts: webservers
-  become: yes
+  gather_facts: false
   vars_files:
     - vars/defaults.yaml
   roles:
     - webserver
 
 - hosts: databases
-  become: yes
   vars_files:
     - vars/defaults.yaml
   roles:

@@ -1,8 +1,10 @@
 ---
 - name: Upgrade apt-get
+  become: yes
   action: apt update_cache=yes upgrade=yes
 
 - name: Install ruby dependencies
+  become: yes
   action: apt pkg={{item}} state=installed
   with_items:
     - build-essential
@@ -24,38 +26,62 @@
     - libxslt1-dev
     - curl
 
-- name: Detect rvm binary
-  stat: path='/usr/local/rvm/bin/rvm'
-  register: rvm_binary
+- name: Install app dependencies
+  become: yes
+  apt: package={{ item }} state=installed force=yes update_cache=yes cache_valid_time=3600
+  with_items:
+    - libmysqlclient-dev
+    - nodejs
 
-- name: Detect current rvm version
-  command: '/usr/local/rvm/bin/rvm version'
-  changed_when: false
-  register: rvm_current_version
-  when: rvm_binary.stat.exists
+- name: Remove system Ruby
+  become: yes
+  apt: pkg=ruby state=absent
 
-- name: Install RVM
-  shell: curl -L get.rvm.io | bash -s stable
-  when: not rvm_binary.stat.exists
+- name: Get currently installed ruby version
+  command: ruby -v
+  register: current_ruby_version
+  ignore_errors: true
 
-- name: Install Ruby 2.3
-  shell: >
-    executable=/bin/bash source /etc/profile.d/rvm.sh;
-    rvm install 2.3
+- name: Create src directory
+  become: yes
+  file: path=/usr/local/src state=directory owner={{ deploy_user }}
+  when: current_ruby_version.rc !=0 or ruby_version not in current_ruby_version.stdout
 
-- name: Set default ruby version
-  shell: >
-    executable=/bin/bash source /etc/profile.d/rvm.sh;
-    rvm --default use 2.3
+- name: Download Ruby {{ ruby_version }}
+  get_url: url=http://ftp.ruby-lang.org/pub/ruby/ruby-{{ ruby_version }}.tar.gz
+           dest=/usr/local/src/ruby.tgz
+  when: current_ruby_version.rc !=0 or ruby_version not in current_ruby_version.stdout
 
-- name: Create deployment user
-  user: name={{ deploy_user }} comment="Application deployment user"
+- name: Expand Ruby
+  unarchive: src=/usr/local/src/ruby.tgz dest=/usr/local/src/ remote_src=true
+  when: current_ruby_version.rc !=0 or ruby_version not in current_ruby_version.stdout
+
+- name: Build Ruby
+  command: chdir=/usr/local/src/ruby-{{ ruby_version }}
+           {{ item }}
+  with_items:
+    - ./configure --disable-install-rdoc
+    - make
+    - sudo make install
+  when: current_ruby_version.rc !=0 or ruby_version not in current_ruby_version.stdout
+
+- name: Update Rubygems
+  become: yes
+  command: gem update --system
+
+- name: Copy no-documentation gemrc
+  become: yes
+  template: src=gemrc dest=/etc/gemrc
+
+- name: Install Bundler
+  become: true
+  gem: name=bundler state=present user_install=false
 
 - name: Create deployment directory
-  file: path={{deploy_directory}} owner=deploy group=deploy state=directory
+  file: path={{ deploy_directory }} state=directory
 
 - name: Make shared directories
-  file: path={{deploy_directory}}/shared/{{item}} group=deploy owner=deploy state=directory
+  file: path={{ deploy_directory }}/shared/{{ item }} state=directory
   with_items:
     - tmp
     - tmp/pids
@@ -67,6 +93,3 @@
     - config
     - config/puma
   tags: shared
-
-- name: Install Bundler
-  command: gem install bundler

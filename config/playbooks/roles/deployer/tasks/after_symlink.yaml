@@ -1,3 +1,40 @@
 ---
-include: update_app_resources.yaml
-include: restart_and_clean.yaml
+- name: 'Running bundle install'
+  bundler:
+    chdir: "{{ ansistrano_release_path.stdout }}"
+    exclude_groups: [development, test]
+    deployment_mode: yes
+
+- name: "Running tasks in all servers"
+  shell: >
+    cd {{ ansistrano_release_path.stdout }} &&
+    RAILS_ENV={{ rails_env }}
+    RACK_ENV={{ rails_env }}
+    {{ item.cmd }}
+  run_once: false
+  when: >
+    ({{ item.control | default(true) }} != false)
+  with_items:
+    - { cmd: "bundle exec rake assets:precompile" }
+
+- name: "Running tasks only in the fist server"
+  shell: >
+    cd {{ ansistrano_release_path.stdout }} &&
+    RAILS_ENV={{ rails_env }}
+    RACK_ENV={{ rails_env }}
+    TEST_DEPLOY_DATABASE_PASSWORD={{database_user_password}}
+    {{ item.cmd }}
+  run_once: true
+  when: >
+    ({{ item.control | default(true) }} != false)
+  with_items:
+    - { cmd: "bundle exec rake db:migrate", control: '{{ migrate }}' }
+    - { cmd: "bundle exec rake db:seed", control: '{{ seed }}'  }
+
+- name: 'Restart puma-manager'
+  become: yes
+  command: service puma restart SECRET_KEY_BASE='{{secret_base}}'
+
+- name: 'Restart nginx'
+  become: yes
+  action: service name=nginx state=restarted

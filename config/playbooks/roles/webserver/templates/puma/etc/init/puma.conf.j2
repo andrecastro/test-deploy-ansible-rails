@@ -21,8 +21,8 @@ description "Puma Background Worker"
 stop on (stopping puma-manager or runlevel [06])
 
 # change apps to match your deployment user if you want to use this as a less privileged user (recommended!)
-setuid deploy
-setgid deploy
+setuid {{deploy_user}}
+setgid {{deploy_user}}
 
 respawn
 respawn limit 3 30
@@ -32,6 +32,5 @@ instance {{deploy_directory}}/current
 script
 cd {{deploy_directory}}/current
 logger -t puma "Starting server: $app"
-exec bundle exec puma -C {{deploy_directory}}/current/config/puma/production.rb
+exec sudo SECRET_KEY_BASE=$SECRET_KEY_BASE bundle exec puma -C {{deploy_directory}}/current/config/puma/production.rb
 end script
-Contact GitHub API Training Shop Blog About

@@ -15,19 +15,19 @@ ansistrano_keep_releases: 3 # Releases to keep after a new deployment. See "Prun
 # ansistrano_shared_files:
 #   - my-file.txt
 #   - path/to/file.txt
-ansistrano_shared_paths: []
+ansistrano_shared_paths: [tmp/sockets, log, config/puma]
 ansistrano_shared_files: []
 
 ansistrano_deploy_via: "git" # Method used to deliver the code to the server.
 ansistrano_allow_anonymous_stats: yes
 
 # Variables used in the Git deployment strategy
-ansistrano_git_repo: git@github.com:USERNAME/REPO.git # Location of the git repository
+ansistrano_git_repo: https://github.com/andrecastro/test-deploy-ansible-rails.git # Location of the git repository
 ansistrano_git_branch: master # What version of the repository to check out. This can be the full 40-character SHA-1 hash, the literal string HEAD, a branch name, or a tag name
 
 # Variables used in the download deployment strategy
 #ansistrano_get_url: https://github.com/someproject/somearchive.tar.gz
 
 # Hooks: custom tasks if you need them
-ansistrano_after_symlink_tasks_file: "{{ playbook_dir }}/deployer/tasks/after_symlink.yaml"
+ansistrano_after_symlink_tasks_file: "{{ playbook_dir }}/roles/deployer/tasks/after_symlink.yaml"
 

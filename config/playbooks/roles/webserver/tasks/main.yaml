@@ -1,9 +1,12 @@
 ---
 - name: Intalling dependencies
   include: prepare.yaml
+  tags: [prepare]
 
 - name: Installing NGINX
   include: nginx.yaml
+  tags: [nginx]
 
 - name: Configuring puma files
   include: puma.yaml
+  tags: [puma]
